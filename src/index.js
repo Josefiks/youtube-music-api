@@ -45,9 +45,9 @@ class YoutubeMusicApi {
     }
 
     _createApiRequest(endpointName, inputVariables, inputQuery = {}) {
-        const headers = Object.assign({
+        const headers = {
             'x-origin': this.client.defaults.baseURL,
-            'X-Goog-Visitor-Id': this.ytcfg.VISITOR_DATA || '',
+            'X-Goog-Visitor-Id': this.ytcfg.VISITOR_DATA,
             'X-YouTube-Client-Name': this.ytcfg.INNERTUBE_CONTEXT_CLIENT_NAME,
             'X-YouTube-Client-Version': this.ytcfg.INNERTUBE_CLIENT_VERSION,
             'X-YouTube-Device': this.ytcfg.DEVICE,
@@ -55,12 +55,17 @@ class YoutubeMusicApi {
             'X-YouTube-Page-Label': this.ytcfg.PAGE_BUILD_LABEL,
             'X-YouTube-Utc-Offset': String(-new Date().getTimezoneOffset()),
             'X-YouTube-Time-Zone': new Intl.DateTimeFormat().resolvedOptions().timeZone
-        }, this.client.defaults.headers)
-
+        };
+    
+        // Filter out undefined headers
+        const filteredHeaders = Object.fromEntries(
+            Object.entries(headers).filter(([_, v]) => v != null)
+        );
+    
         return new Promise((resolve, reject) => {
             this.client.post(`youtubei/${this.ytcfg.INNERTUBE_API_VERSION}/${endpointName}?${querystring.stringify(Object.assign({alt:'json',key:this.ytcfg.INNERTUBE_API_KEY}, inputQuery))}`, Object.assign(inputVariables, utils.createApiContext(this.ytcfg)), {
                     responseType: 'json',
-                    headers: headers
+                    headers: filteredHeaders
                 })
                 .then(res => {
                     if (res.data.hasOwnProperty('responseContext')) {
